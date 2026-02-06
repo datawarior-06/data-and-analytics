@@ -11,6 +11,9 @@
 		"AzureDatabricks_accessToken": {
 			"value": ""
 		},
+		"AzureDatabricks_properties_typeProperties_existingClusterId": {
+			"value": "0206-090306-f1id4h3v"
+		},
 		"containerUri": {
 			"value": ""
 		},
