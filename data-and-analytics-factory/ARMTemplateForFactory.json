@@ -50,7 +50,7 @@
 							"baseParameters": {
 								"env": "dev",
 								"file": {
-									"value": "@activity('GetMetadata').output.childItems\n",
+									"value": "@activity('GetMetadata').output.childItems[0].name\n",
 									"type": "Expression"
 								}
 							}
