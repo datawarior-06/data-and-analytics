@@ -6,15 +6,15 @@
 		"type": "AzureDatabricks",
 		"typeProperties": {
 			"domain": "https://adb-7405609046793582.2.azuredatabricks.net",
-			"instancePoolId": "0207-150308-cycle99-pool-11or2ba3",
+			"instancePoolId": "0207-154522-split99-pool-3mmvo7tn",
 			"newClusterNumOfWorker": "1",
 			"newClusterSparkEnvVars": {
 				"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
 			},
-			"newClusterVersion": "17.3.x-photon-scala2.13",
+			"newClusterVersion": "17.3.x-scala2.13",
 			"newClusterInitScripts": [],
 			"clusterOption": "Fixed",
-			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDZGNDE5MUM3LTc5MEMtNDRGMS1CMEE5LUUwOUJGMUI5Q0E1NV8yNzY4NWQwNi0zMjZkLTQ4OWItYjA2YS1iNjAwOTljYTQ5MWUiDQp9"
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDZGNDE5MUM3LTc5MEMtNDRGMS1CMEE5LUUwOUJGMUI5Q0E1NV85NDdkYzcyMy1mNWIwLTQ4MTQtYmM2MS1jOThiYjhhOTEyZTEiDQp9"
 		}
 	}
 }
