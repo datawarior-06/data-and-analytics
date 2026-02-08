@@ -14,6 +14,10 @@
 		"AzureDatabricks_accessToken": {
 			"type": "secureString",
 			"metadata": "Secure string for 'accessToken' of 'AzureDatabricks'"
+		},
+		"AzureKeyVault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://globalvaultdata.vault.azure.net/"
 		}
 	},
 	"variables": {
@@ -79,16 +83,34 @@
 						"typeProperties": {
 							"method": "POST",
 							"headers": {
-								"Authorization": {
-									"value": "Bearer @globalvaultdata.getSecret('databricks-pat')",
-									"type": "Expression"
-								},
 								"Content-Type": "application/json"
 							},
+							"linkedServices": [
+								{
+									"referenceName": "AzureKeyVault",
+									"type": "LinkedServiceReference"
+								}
+							],
 							"url": "https://adb-7405609046793582.2.azuredatabricks.net/api/2.1/jobs/run-now",
 							"body": {
-								"value": "{\n  \"job_id\": 380597783980207,\n  \"notebook_params\": {\n    \"file\": \"@activity('GetMetadata').output.childItems[0].name\",\n    \"env\": \"dev\"\n  }\n}\n",
+								"value": "{\n  \"job_id\": 380597783980207,\n  \"notebook_params\": {\n    \"file\": \"@{activity('GetMetadata').output.childItems[0].name}\",\n    \"env\": \"dev\"\n  }\n}",
 								"type": "Expression"
+							},
+							"authentication": {
+								"type": "Basic",
+								"username": {
+									"value": "token",
+									"type": "Expression"
+								},
+								"password": {
+									"type": "AzureKeyVaultSecret",
+									"store": {
+										"referenceName": "AzureKeyVault",
+										"type": "LinkedServiceReference"
+									},
+									"secretName": "databricks-pat",
+									"secretVersion": "05cd483693ba41d5905db84cc44aa7a0"
+								}
 							}
 						}
 					}
@@ -99,7 +121,8 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DelimitedText')]"
+				"[concat(variables('factoryId'), '/datasets/DelimitedText')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureKeyVault')]"
 			]
 		},
 		{
@@ -293,6 +316,19 @@
 					"newClusterVersion": "10.4.x-scala2.12",
 					"newClusterInitScripts": [],
 					"clusterOption": "Fixed"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureKeyVault')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('AzureKeyVault_properties_typeProperties_baseUrl')]"
 				}
 			},
 			"dependsOn": []

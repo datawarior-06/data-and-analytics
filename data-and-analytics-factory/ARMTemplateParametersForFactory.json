@@ -10,6 +10,9 @@
 		},
 		"AzureDatabricks_accessToken": {
 			"value": ""
+		},
+		"AzureKeyVault_properties_typeProperties_baseUrl": {
+			"value": "https://globalvaultdata.vault.azure.net/"
 		}
 	}
 }
