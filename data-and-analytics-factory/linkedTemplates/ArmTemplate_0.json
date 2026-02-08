@@ -14,10 +14,6 @@
 		"AzureDatabricks_accessToken": {
 			"type": "secureString",
 			"metadata": "Secure string for 'accessToken' of 'AzureDatabricks'"
-		},
-		"AzureDatabricks_properties_typeProperties_existingClusterId": {
-			"type": "string",
-			"defaultValue": "0206-090306-f1id4h3v"
 		}
 	},
 	"variables": {
@@ -50,7 +46,16 @@
 						"type": "SecureString",
 						"value": "[parameters('AzureDatabricks_accessToken')]"
 					},
-					"existingClusterId": "[parameters('AzureDatabricks_properties_typeProperties_existingClusterId')]"
+					"instancePoolId": "0207-155104-feint104-pool-xuge1u3f",
+					"newClusterNumOfWorker": "0",
+					"newClusterSparkEnvVars": {
+						"spark.databricks.cluster.profile": "singleNode",
+						"spark.master": "local[*]",
+						"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+					},
+					"newClusterVersion": "10.4.x-scala2.12",
+					"newClusterInitScripts": [],
+					"clusterOption": "Fixed"
 				}
 			},
 			"dependsOn": []
@@ -217,40 +222,6 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "transform",
-						"type": "DatabricksNotebook",
-						"dependsOn": [
-							{
-								"activity": "GetMetadata",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"notebookPath": "/Users/bala_ps2606mte17@iitp.ac.in/data-and-analytics/notebooks/purchase-orders/transform",
-							"baseParameters": {
-								"env": "dev",
-								"file": {
-									"value": "@activity('GetMetadata').output.childItems[0].name\n",
-									"type": "Expression"
-								}
-							}
-						},
-						"linkedServiceName": {
-							"referenceName": "AzureDatabricks",
-							"type": "LinkedServiceReference"
-						}
-					},
-					{
 						"name": "GetMetadata",
 						"type": "GetMetadata",
 						"dependsOn": [],
@@ -282,11 +253,11 @@
 						}
 					},
 					{
-						"name": "load",
-						"type": "DatabricksNotebook",
+						"name": "db_job",
+						"type": "WebActivity",
 						"dependsOn": [
 							{
-								"activity": "transform",
+								"activity": "GetMetadata",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -301,11 +272,19 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"notebookPath": "/Users/bala_ps2606mte17@iitp.ac.in/data-and-analytics/notebooks/purchase-orders/load"
-						},
-						"linkedServiceName": {
-							"referenceName": "AzureDatabricks",
-							"type": "LinkedServiceReference"
+							"method": "POST",
+							"headers": {
+								"Authorization": {
+									"value": "Bearer @globalvaultdata.getSecret('databricks-pat')",
+									"type": "Expression"
+								},
+								"Content-Type": "application/json"
+							},
+							"url": "https://adb-7405609046793582.2.azuredatabricks.net/api/2.1/jobs/run-now",
+							"body": {
+								"value": "{\n  \"job_id\": 380597783980207,\n  \"notebook_params\": {\n    \"file\": \"@activity('GetMetadata').output.childItems[0].name\",\n    \"env\": \"dev\"\n  }\n}\n",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -315,7 +294,6 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks')]",
 				"[concat(variables('factoryId'), '/datasets/DelimitedText')]"
 			]
 		}
