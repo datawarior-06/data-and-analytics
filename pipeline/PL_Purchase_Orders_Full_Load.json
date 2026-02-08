@@ -33,7 +33,7 @@
 				}
 			},
 			{
-				"name": "db_job1",
+				"name": "db_job",
 				"type": "WebActivity",
 				"dependsOn": [
 					{
