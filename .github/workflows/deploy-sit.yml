@@ -39,5 +39,5 @@ jobs:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ secrets.SIT_RESOURCE_GROUP }}
           template: data-and-analytics-factory/ARMTemplateForFactory.json
-          parameters: data-and-analytics-factory/ARMTemplates/ARMTemplateParametersForFactory.json
+          parameters: data-and-analytics-factory/ARMTemplateParametersForFactory.json
           failOnStdErr: true
