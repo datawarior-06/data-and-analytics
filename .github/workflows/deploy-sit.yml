@@ -1,50 +1,28 @@
 name: Deploy ADF to SIT
 
-# When to trigger – on push to main branch
 on:
   push:
     branches:
-      - main
+      - adf_publish
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Check out the code
-      - name: Checkout repository
+      - name: Checkout adf_publish
         uses: actions/checkout@v3
 
-      # 2) Login to Azure
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # 3) Export ARM templates from ADF definitions
-      #    (optional if you already have them pre-generated)
-      - name: Build ADF ARM Template
-        run: |
-            npm install @microsoft/azure-data-factory-utilities
-            npx azure-data-factory-utilities export \
-            --source ./ \
-            --output ./ARMTemplates
-
-
-      # 4) Deploy ARM template to SIT resource group
-      - name: Deploy ADF Templates
+      - name: Deploy ADF ARM Templates to SIT
         uses: azure/arm-deploy@v2
         with:
           scope: resourcegroup
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ secrets.SIT_RESOURCE_GROUP }}
-          template: ./ARMTemplates/ARMTemplateForFactory.json
-          parameters: ./ARMTemplates/ARMTemplateParametersForFactory.json
-
-      # 5) Optionally restart triggers after deploy
-      - name: Restart triggers (optional)
-        run: |
-          az datafactory pipeline create-run \
-            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
-            --factory-name ${{ secrets.SIT_DATAFACTORY_NAME }} \
-            --name "YourTriggerRestartScriptOrCommand"
+          template: ARMTemplateForFactory.json
+          parameters: ARMTemplateParametersForFactory.json
