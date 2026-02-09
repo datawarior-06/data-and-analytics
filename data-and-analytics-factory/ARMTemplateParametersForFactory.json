@@ -6,10 +6,10 @@
 			"value": "data-and-analytics-factory"
 		},
 		"AmazonS3_secretAccessKey": {
-			"value": ""
+			"value": "FakeSecretAccessKey"
 		},
 		"AzureBlobStorage_connectionString": {
-			"value": ""
+			"value": "FakeConnectionString"
 		},
 		"AmazonS3_properties_typeProperties_accessKeyId": {
 			"value": "AKIA3LEZTOQYD4UJ5OPQ"
