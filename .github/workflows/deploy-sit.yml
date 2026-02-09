@@ -10,14 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout adf_publish
+      # Checkout your repo with ARM templates
+      - name: Checkout ARM Templates Repo
         uses: actions/checkout@v3
-
+        with:
+          repository: datawarior-06/data-and-analytics
+          ref: main   # branch containing ARM templates
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Login to Azure using service principal
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
+      
+      # Deploy ADF ARM templates to SIT
       - name: Deploy ADF ARM Templates to SIT
         uses: azure/arm-deploy@v2
         with:
