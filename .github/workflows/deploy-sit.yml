@@ -6,12 +6,6 @@ on:
       - main
 
 jobs:
-  - name: Debug – list files
-    run: |
-      pwd
-      ls -la
-      find . -name "ARMTemplateForFactory.json"
-
   deploy:
     runs-on: ubuntu-latest
 
