@@ -266,7 +266,7 @@
 						}
 					},
 					{
-						"name": "db_job",
+						"name": "databricks_job",
 						"type": "WebActivity",
 						"dependsOn": [
 							{
