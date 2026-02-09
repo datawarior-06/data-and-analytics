@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Data and Analytics solution
 
 ## Complete Data Engineering solution for different business use cases
@@ -34,3 +35,6 @@
     SQL
     Python
     PySpark
+=======
+Initialized by Azure Data Factory!
+>>>>>>> origin/adf

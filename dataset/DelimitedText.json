@@ -146,5 +146,10 @@
 				"type": "String"
 			}
 		]
+<<<<<<< HEAD
 	}
+=======
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+>>>>>>> origin/adf
 }
