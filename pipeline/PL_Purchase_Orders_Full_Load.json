@@ -24,7 +24,6 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobStorageReadSettings",
-						"recursive": true,
 						"enablePartitionDiscovery": false
 					},
 					"formatSettings": {
@@ -62,9 +61,9 @@
 							"type": "LinkedServiceReference"
 						}
 					],
-					"url": "https://adb-7405609046793582.2.azuredatabricks.net/api/2.1/jobs/run-now",
+					"url": "https://dbc-13bf2494-595e.cloud.databricks.com/api/2.1/jobs/run-now",
 					"body": {
-						"value": "{\n  \"job_id\": 380597783980207,\n  \"notebook_params\": {\n    \"file\": \"@{activity('GetMetadata').output.childItems[0].name}\",\n    \"env\": \"dev\"\n  }\n}",
+						"value": "{\n  \"job_id\": 708606479377793,\n  \"notebook_params\": {\n    \"file\": \"@{activity('GetMetadata').output.childItems[0].name}\",\n    \"env\": \"dev\"\n  }\n}",
 						"type": "Expression"
 					},
 					"authentication": {
@@ -79,8 +78,8 @@
 								"referenceName": "AzureKeyVault",
 								"type": "LinkedServiceReference"
 							},
-							"secretName": "databricks-pat",
-							"secretVersion": "05cd483693ba41d5905db84cc44aa7a0"
+							"secretName": "db-community-token",
+							"secretVersion": "d9a02b08b1d24ce59f1275bc68ad4393"
 						}
 					}
 				}

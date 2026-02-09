@@ -2,16 +2,16 @@
 	"name": "DelimitedText",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "AzureBlobStorage",
+			"referenceName": "AmazonS3",
 			"type": "LinkedServiceReference"
 		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
 			"location": {
-				"type": "AzureBlobStorageLocation",
-				"folderPath": "bronze",
-				"container": "purchase-orders"
+				"type": "AmazonS3Location",
+				"bucketName": "purchase-orders-aws",
+				"folderPath": "bronze"
 			},
 			"columnDelimiter": ",",
 			"escapeChar": "\\",
