@@ -24,10 +24,7 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobStorageReadSettings",
-<<<<<<< HEAD
-=======
 						"recursive": true,
->>>>>>> origin/adf
 						"enablePartitionDiscovery": false
 					},
 					"formatSettings": {
@@ -36,11 +33,7 @@
 				}
 			},
 			{
-<<<<<<< HEAD
-				"name": "db_job",
-=======
 				"name": "databricks_job",
->>>>>>> origin/adf
 				"type": "WebActivity",
 				"dependsOn": [
 					{
@@ -93,13 +86,8 @@
 				}
 			}
 		],
-<<<<<<< HEAD
-		"annotations": []
-	}
-=======
 		"annotations": [],
-		"lastPublishTime": "2026-02-09T09:48:32Z"
+		"lastPublishTime": "2026-02-09T10:01:37Z"
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
->>>>>>> origin/adf
 }

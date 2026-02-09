@@ -1,9 +1,6 @@
 {
 	"name": "AzureKeyVault",
-<<<<<<< HEAD
-=======
 	"type": "Microsoft.DataFactory/factories/linkedservices",
->>>>>>> origin/adf
 	"properties": {
 		"annotations": [],
 		"type": "AzureKeyVault",
