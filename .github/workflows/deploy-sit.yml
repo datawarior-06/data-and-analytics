@@ -3,7 +3,7 @@ name: Deploy ADF_Publish to SIT_ADF_Publish
 on:
   push:
     branches:
-      - adf_publish
+      - adf
 
 jobs:
   deploy:
