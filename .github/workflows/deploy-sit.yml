@@ -6,10 +6,6 @@ on:
       - main
   workflow_dispatch:  # Allow manual trigger
 
-env:
-  FACTORY_NAME: data-and-analytics-factory
-  LOCATION: centralindia
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -22,7 +18,43 @@ jobs:
         uses: actions/checkout@v3
 
       # ========================================
-      # STEP 2: DEBUG - LIST FILES
+      # STEP 2: LOAD ENVIRONMENT VARIABLES FROM sit.env
+      # ========================================
+      - name: Load SIT environment variables
+        run: |
+          echo "=== Loading environment variables from sit.env ==="
+          
+          if [ -f sit.env ]; then
+            # Load variables into GitHub environment
+            while IFS='=' read -r key value; do
+              # Skip comments and empty lines
+              [[ "$key" =~ ^#.*$ ]] && continue
+              [[ -z "$key" ]] && continue
+              
+              # Remove any whitespace
+              key=$(echo "$key" | xargs)
+              value=$(echo "$value" | xargs)
+              
+              # Export to GitHub environment
+              echo "$key=$value" >> $GITHUB_ENV
+              echo "Loaded: $key=$value"
+            done < sit.env
+            
+            echo "✓ Environment variables loaded successfully"
+          else
+            echo "✗ ERROR: sit.env file not found!"
+            exit 1
+          fi
+          
+          echo ""
+          echo "=== Environment Configuration ==="
+          echo "Resource Group: $RESOURCE_GROUP"
+          echo "ADF Name: $ADF_NAME"
+          echo "Location: $LOCATION"
+          echo "Databricks Host: $DATABRICKS_HOST"
+
+      # ========================================
+      # STEP 3: DEBUG - LIST FILES
       # ========================================
       - name: List repository files
         run: |
@@ -80,12 +112,13 @@ jobs:
         run: |
           echo "=== Target Environment Details ==="
           echo "Subscription ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-          echo "Resource Group: ${{ secrets.SIT_RESOURCE_GROUP }}"
-          echo "Factory Name: ${{ env.FACTORY_NAME }}"
+          echo "Resource Group: ${{ env.RESOURCE_GROUP }}"
+          echo "Factory Name: ${{ env.ADF_NAME }}"
+          echo "Location: ${{ env.LOCATION }}"
           echo ""
           
           echo "=== Checking if Resource Group exists ==="
-          if az group show --name ${{ secrets.SIT_RESOURCE_GROUP }} &> /dev/null; then
+          if az group show --name ${{ env.RESOURCE_GROUP }} &> /dev/null; then
             echo "✓ Resource Group exists"
           else
             echo "✗ Resource Group does NOT exist"
@@ -95,12 +128,12 @@ jobs:
           echo ""
           echo "=== Checking if Data Factory exists ==="
           if az datafactory show \
-            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
-            --name ${{ env.FACTORY_NAME }} &> /dev/null; then
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --name ${{ env.ADF_NAME }} &> /dev/null; then
             echo "✓ Data Factory exists"
             az datafactory show \
-              --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
-              --name ${{ env.FACTORY_NAME }} \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --name ${{ env.ADF_NAME }} \
               --query "{name:name, location:location, provisioningState:provisioningState}" \
               -o table
           else
@@ -113,19 +146,41 @@ jobs:
       - name: Create Data Factory if not exists
         run: |
           echo "=== Ensuring Data Factory exists ==="
+          echo "Attempting to create factory: ${{ env.ADF_NAME }}"
+          
           if ! az datafactory show \
-            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
-            --name ${{ env.FACTORY_NAME }} &> /dev/null; then
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --name ${{ env.ADF_NAME }} &> /dev/null; then
             
             echo "Creating new Data Factory..."
-            az datafactory create \
-              --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
-              --factory-name ${{ env.FACTORY_NAME }} \
-              --location ${{ env.LOCATION }}
             
-            echo "✓ Data Factory created successfully"
+            # Try to create, handle the case where name is globally taken
+            if az datafactory create \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --factory-name ${{ env.ADF_NAME }} \
+              --location ${{ env.LOCATION }} 2>&1 | tee /tmp/create_output.txt; then
+              echo "✓ Data Factory created successfully"
+            else
+              if grep -q "DataFactoryNameInUse" /tmp/create_output.txt; then
+                echo "✗ ERROR: Factory name '${{ env.ADF_NAME }}' is already in use globally"
+                echo "This name exists in another resource group or subscription"
+                echo ""
+                echo "SOLUTIONS:"
+                echo "1. Change ADF_NAME in sit.env to a different unique name"
+                echo "2. Deploy to the resource group where this factory already exists"
+                echo "3. Delete the existing factory if it's no longer needed"
+                echo ""
+                echo "To find where the factory exists, run:"
+                echo "az resource list --name ${{ env.ADF_NAME }} --resource-type Microsoft.DataFactory/factories"
+                exit 1
+              else
+                echo "✗ Factory creation failed for another reason"
+                cat /tmp/create_output.txt
+                exit 1
+              fi
+            fi
           else
-            echo "✓ Data Factory already exists - skipping creation"
+            echo "✓ Data Factory already exists in this resource group - skipping creation"
           fi
 
       # ========================================
@@ -135,10 +190,10 @@ jobs:
         run: |
           echo "=== Validating ARM Template ==="
           az deployment group validate \
-            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
             --template-file data-and-analytics-factory/ARMTemplateForFactory.json \
             --parameters data-and-analytics-factory/ARMTemplateParametersForFactory.json \
-            --parameters factoryName=${{ env.FACTORY_NAME }} \
+            --parameters factoryName=${{ env.ADF_NAME }} \
             --verbose
           
           if [ $? -eq 0 ]; then
@@ -156,9 +211,9 @@ jobs:
         with:
           scope: resourcegroup
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          resourceGroupName: ${{ secrets.SIT_RESOURCE_GROUP }}
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
           template: data-and-analytics-factory/ARMTemplateForFactory.json
-          parameters: data-and-analytics-factory/ARMTemplateParametersForFactory.json factoryName=${{ env.FACTORY_NAME }}
+          parameters: data-and-analytics-factory/ARMTemplateParametersForFactory.json factoryName=${{ env.ADF_NAME }}
           deploymentMode: Incremental
           deploymentName: ADF-Deployment-${{ github.run_number }}
           failOnStdErr: false
@@ -171,19 +226,19 @@ jobs:
         run: |
           echo "=== Deployment Status ==="
           az deployment group list \
-            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
             --query "[0].{Name:name, State:properties.provisioningState, Timestamp:properties.timestamp}" \
             -o table
           
           echo ""
           echo "=== Checking for deployment errors ==="
           DEPLOYMENT_NAME=$(az deployment group list \
-            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
             --query "[0].name" -o tsv)
           
           if [ ! -z "$DEPLOYMENT_NAME" ]; then
             az deployment operation group list \
-              --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
               --name "$DEPLOYMENT_NAME" \
               --query "[?properties.provisioningState=='Failed'].{Resource:properties.targetResource.resourceName, Error:properties.statusMessage.error.message}" \
               -o table
@@ -192,8 +247,8 @@ jobs:
           echo ""
           echo "=== Final Data Factory Status ==="
           az datafactory show \
-            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
-            --name ${{ env.FACTORY_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --name ${{ env.ADF_NAME }} \
             --query "{Name:name, Location:location, State:provisioningState, ID:id}" \
             -o table
 
@@ -205,24 +260,24 @@ jobs:
         run: |
           echo "=== Deployed Pipelines ==="
           az datafactory pipeline list \
-            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
-            --factory-name ${{ env.FACTORY_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --factory-name ${{ env.ADF_NAME }} \
             --query "[].name" \
             -o table || echo "No pipelines found"
           
           echo ""
           echo "=== Deployed Datasets ==="
           az datafactory dataset list \
-            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
-            --factory-name ${{ env.FACTORY_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --factory-name ${{ env.ADF_NAME }} \
             --query "[].name" \
             -o table || echo "No datasets found"
           
           echo ""
           echo "=== Deployed Linked Services ==="
           az datafactory linked-service list \
-            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
-            --factory-name ${{ env.FACTORY_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --factory-name ${{ env.ADF_NAME }} \
             --query "[].name" \
             -o table || echo "No linked services found"
 
@@ -236,23 +291,24 @@ jobs:
           echo "DEPLOYMENT FAILED - TROUBLESHOOTING INFO"
           echo "=========================================="
           echo ""
-          echo "1. Check if the resource group name is correct:"
-          echo "   Resource Group: ${{ secrets.SIT_RESOURCE_GROUP }}"
+          echo "1. Environment configuration from sit.env:"
+          echo "   Resource Group: ${{ env.RESOURCE_GROUP }}"
+          echo "   Factory Name: ${{ env.ADF_NAME }}"
+          echo "   Location: ${{ env.LOCATION }}"
           echo ""
-          echo "2. Check if the factory name matches the parameters:"
-          echo "   Factory Name: ${{ env.FACTORY_NAME }}"
-          echo ""
-          echo "3. Recent deployment operations:"
+          echo "2. Recent deployment operations:"
           DEPLOYMENT_NAME=$(az deployment group list \
-            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
             --query "[0].name" -o tsv)
           
           if [ ! -z "$DEPLOYMENT_NAME" ]; then
             az deployment operation group list \
-              --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
               --name "$DEPLOYMENT_NAME" \
               -o table
           fi
           echo ""
-          echo "4. Check the ARM template and parameters files for syntax errors"
-          echo "5. Verify that all required secrets are set in GitHub repository settings"
+          echo "3. Check the ARM template and parameters files for syntax errors"
+          echo "4. Verify that all required secrets are set in GitHub repository settings"
+          echo "5. Ensure sit.env file has correct values"
+          echo "6. Check if factory name is globally unique in Azure"
