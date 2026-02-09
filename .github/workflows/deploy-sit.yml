@@ -25,7 +25,7 @@ jobs:
       #    (optional if you already have them pre-generated)
       - name: Build ADF ARM Template
         run: |
-            npm install -g @microsoft/azure-data-factory-utilities
+            npm install @microsoft/azure-data-factory-utilities
             npx azure-data-factory-utilities export \
             --source ./ \
             --output ./ARMTemplates
