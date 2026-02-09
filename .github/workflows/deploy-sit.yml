@@ -34,4 +34,4 @@ jobs:
           template: data-and-analytics-factory/ARMTemplateForFactory.json
           parameters: data-and-analytics-factory/ARMTemplateParametersForFactory.json
           deploymentMode: Incremental
-          failOnStdErr: false  # Change to false to see detailed errors
+          failOnStdErr: true
