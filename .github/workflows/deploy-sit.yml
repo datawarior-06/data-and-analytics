@@ -22,9 +22,9 @@ jobs:
       # ========================================
       - name: Load SIT environment variables
         run: |
-          echo "=== Loading environment variables from sit.env ==="
+          echo "=== Loading environment variables from env/sit.env ==="
           
-          if [ -f sit.env ]; then
+          if [ -f env/sit.env ]; then
             # Load variables into GitHub environment
             while IFS='=' read -r key value; do
               # Skip comments and empty lines
@@ -38,11 +38,16 @@ jobs:
               # Export to GitHub environment
               echo "$key=$value" >> $GITHUB_ENV
               echo "Loaded: $key=$value"
-            done < sit.env
+            done < env/sit.env
             
             echo "✓ Environment variables loaded successfully"
           else
-            echo "✗ ERROR: sit.env file not found!"
+            echo "✗ ERROR: env/sit.env file not found!"
+            echo "Listing current directory contents:"
+            ls -la
+            echo ""
+            echo "Checking if env directory exists:"
+            ls -la env/ || echo "env directory does not exist"
             exit 1
           fi
           
