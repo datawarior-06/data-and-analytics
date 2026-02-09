@@ -6,8 +6,12 @@
 
 #### Tools:
     Azure Data Factory
-    Azure Data Bricks
+    Data Bricks Community
     Github
+    Github Actions
     Azure Data Lake Storage Gen 2
+    Amazon S3
+    Amazon IAM
+    Amazon Redshift
     Synapse Warehouse/Lakehouse
     Power BI
