@@ -22,9 +22,9 @@ jobs:
       # ========================================
       - name: Load SIT environment variables
         run: |
-          echo "=== Loading environment variables from env/sit.env ==="
+          echo "=== Loading environment variables from .github/workflows/env/sit.env ==="
           
-          if [ -f env/sit.env ]; then
+          if [ -f .github/workflows/env/sit.env ]; then
             # Load variables into GitHub environment
             while IFS='=' read -r key value; do
               # Skip comments and empty lines
@@ -38,16 +38,16 @@ jobs:
               # Export to GitHub environment
               echo "$key=$value" >> $GITHUB_ENV
               echo "Loaded: $key=$value"
-            done < env/sit.env
+            done < .github/workflows/env/sit.env
             
             echo "✓ Environment variables loaded successfully"
           else
-            echo "✗ ERROR: env/sit.env file not found!"
-            echo "Listing current directory contents:"
-            ls -la
+            echo "✗ ERROR: .github/workflows/env/sit.env file not found!"
+            echo "Listing .github/workflows/ contents:"
+            ls -la .github/workflows/
             echo ""
             echo "Checking if env directory exists:"
-            ls -la env/ || echo "env directory does not exist"
+            ls -la .github/workflows/env/ || echo "env directory does not exist"
             exit 1
           fi
           
