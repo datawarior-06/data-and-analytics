@@ -1,37 +1,258 @@
-name: Deploy ADF_Publish to SIT_ADF_Publish
+name: Deploy Azure Data Factory to SIT Environment
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  FACTORY_NAME: data-and-analytics-factory
+  LOCATION: centralindia
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
-      # 1️⃣ Checkout your repo (contains both workflow and ARM templates)
+      # ========================================
+      # STEP 1: CHECKOUT REPOSITORY
+      # ========================================
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Debug: list files to verify ARM templates location
-      - name: List files
-        run: ls -R data-and-analytics-factory
+      # ========================================
+      # STEP 2: DEBUG - LIST FILES
+      # ========================================
+      - name: List repository files
+        run: |
+          echo "=== Repository Structure ==="
+          ls -R
+          echo ""
+          echo "=== ARM Template Directory ==="
+          ls -la data-and-analytics-factory/ || echo "ARM template directory not found!"
 
-      # 3️⃣ Login to Azure
+      # ========================================
+      # STEP 3: VALIDATE ARM TEMPLATE STRUCTURE
+      # ========================================
+      - name: Check ARM template structure
+        run: |
+          echo "=== Checking if factory resource exists in template ==="
+          if grep -q '"type": "Microsoft.DataFactory/factories"' data-and-analytics-factory/ARMTemplateForFactory.json; then
+            echo "✓ Factory resource found in template"
+            grep -A 10 '"type": "Microsoft.DataFactory/factories"' data-and-analytics-factory/ARMTemplateForFactory.json
+          else
+            echo "⚠ WARNING: Factory resource NOT found in template - only child resources will be deployed"
+          fi
+          echo ""
+          echo "=== Template Resource Types ==="
+          grep '"type": "Microsoft.DataFactory' data-and-analytics-factory/ARMTemplateForFactory.json || echo "No DataFactory resources found"
+
+      # ========================================
+      # STEP 4: VALIDATE JSON SYNTAX
+      # ========================================
+      - name: Validate JSON files
+        run: |
+          echo "=== Validating ARM Template JSON ==="
+          if ! command -v jq &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y jq
+          fi
+          
+          jq empty data-and-analytics-factory/ARMTemplateForFactory.json && echo "✓ Template JSON is valid" || exit 1
+          jq empty data-and-analytics-factory/ARMTemplateParametersForFactory.json && echo "✓ Parameters JSON is valid" || exit 1
+          
+          echo ""
+          echo "=== Parameters in file ==="
+          jq '.parameters' data-and-analytics-factory/ARMTemplateParametersForFactory.json
+
+      # ========================================
+      # STEP 5: AZURE LOGIN
+      # ========================================
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # 4️⃣ Deploy ARM Templates to SIT
+      # ========================================
+      # STEP 6: DEBUG - CHECK TARGET ENVIRONMENT
+      # ========================================
+      - name: Debug - Check target resource group and factory
+        run: |
+          echo "=== Target Environment Details ==="
+          echo "Subscription ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          echo "Resource Group: ${{ secrets.SIT_RESOURCE_GROUP }}"
+          echo "Factory Name: ${{ env.FACTORY_NAME }}"
+          echo ""
+          
+          echo "=== Checking if Resource Group exists ==="
+          if az group show --name ${{ secrets.SIT_RESOURCE_GROUP }} &> /dev/null; then
+            echo "✓ Resource Group exists"
+          else
+            echo "✗ Resource Group does NOT exist"
+            exit 1
+          fi
+          
+          echo ""
+          echo "=== Checking if Data Factory exists ==="
+          if az datafactory show \
+            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+            --name ${{ env.FACTORY_NAME }} &> /dev/null; then
+            echo "✓ Data Factory exists"
+            az datafactory show \
+              --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+              --name ${{ env.FACTORY_NAME }} \
+              --query "{name:name, location:location, provisioningState:provisioningState}" \
+              -o table
+          else
+            echo "⚠ Data Factory does NOT exist - will be created"
+          fi
+
+      # ========================================
+      # STEP 7: CREATE DATA FACTORY IF NOT EXISTS
+      # ========================================
+      - name: Create Data Factory if not exists
+        run: |
+          echo "=== Ensuring Data Factory exists ==="
+          if ! az datafactory show \
+            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+            --name ${{ env.FACTORY_NAME }} &> /dev/null; then
+            
+            echo "Creating new Data Factory..."
+            az datafactory create \
+              --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+              --factory-name ${{ env.FACTORY_NAME }} \
+              --location ${{ env.LOCATION }}
+            
+            echo "✓ Data Factory created successfully"
+          else
+            echo "✓ Data Factory already exists - skipping creation"
+          fi
+
+      # ========================================
+      # STEP 8: VALIDATE ARM TEMPLATE
+      # ========================================
+      - name: Validate ARM Template deployment
+        run: |
+          echo "=== Validating ARM Template ==="
+          az deployment group validate \
+            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+            --template-file data-and-analytics-factory/ARMTemplateForFactory.json \
+            --parameters data-and-analytics-factory/ARMTemplateParametersForFactory.json \
+            --parameters factoryName=${{ env.FACTORY_NAME }} \
+            --verbose
+          
+          if [ $? -eq 0 ]; then
+            echo "✓ Template validation successful"
+          else
+            echo "✗ Template validation failed"
+            exit 1
+          fi
+
+      # ========================================
+      # STEP 9: DEPLOY ARM TEMPLATE
+      # ========================================
       - name: Deploy ADF ARM Templates to SIT
         uses: azure/arm-deploy@v2
         with:
-          scope: resourcegroup 
+          scope: resourcegroup
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ secrets.SIT_RESOURCE_GROUP }}
           template: data-and-analytics-factory/ARMTemplateForFactory.json
-          parameters: data-and-analytics-factory/ARMTemplateParametersForFactory.json
+          parameters: data-and-analytics-factory/ARMTemplateParametersForFactory.json factoryName=${{ env.FACTORY_NAME }}
           deploymentMode: Incremental
-          failOnStdErr: true
+          deploymentName: ADF-Deployment-${{ github.run_number }}
+          failOnStdErr: false
+
+      # ========================================
+      # STEP 10: VERIFY DEPLOYMENT
+      # ========================================
+      - name: Verify deployment
+        if: always()
+        run: |
+          echo "=== Deployment Status ==="
+          az deployment group list \
+            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+            --query "[0].{Name:name, State:properties.provisioningState, Timestamp:properties.timestamp}" \
+            -o table
+          
+          echo ""
+          echo "=== Checking for deployment errors ==="
+          DEPLOYMENT_NAME=$(az deployment group list \
+            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+            --query "[0].name" -o tsv)
+          
+          if [ ! -z "$DEPLOYMENT_NAME" ]; then
+            az deployment operation group list \
+              --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+              --name "$DEPLOYMENT_NAME" \
+              --query "[?properties.provisioningState=='Failed'].{Resource:properties.targetResource.resourceName, Error:properties.statusMessage.error.message}" \
+              -o table
+          fi
+          
+          echo ""
+          echo "=== Final Data Factory Status ==="
+          az datafactory show \
+            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+            --name ${{ env.FACTORY_NAME }} \
+            --query "{Name:name, Location:location, State:provisioningState, ID:id}" \
+            -o table
+
+      # ========================================
+      # STEP 11: LIST DEPLOYED RESOURCES (OPTIONAL)
+      # ========================================
+      - name: List deployed Data Factory resources
+        if: success()
+        run: |
+          echo "=== Deployed Pipelines ==="
+          az datafactory pipeline list \
+            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+            --factory-name ${{ env.FACTORY_NAME }} \
+            --query "[].name" \
+            -o table || echo "No pipelines found"
+          
+          echo ""
+          echo "=== Deployed Datasets ==="
+          az datafactory dataset list \
+            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+            --factory-name ${{ env.FACTORY_NAME }} \
+            --query "[].name" \
+            -o table || echo "No datasets found"
+          
+          echo ""
+          echo "=== Deployed Linked Services ==="
+          az datafactory linked-service list \
+            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+            --factory-name ${{ env.FACTORY_NAME }} \
+            --query "[].name" \
+            -o table || echo "No linked services found"
+
+      # ========================================
+      # STEP 12: CLEANUP ON FAILURE (OPTIONAL)
+      # ========================================
+      - name: Show troubleshooting info on failure
+        if: failure()
+        run: |
+          echo "=========================================="
+          echo "DEPLOYMENT FAILED - TROUBLESHOOTING INFO"
+          echo "=========================================="
+          echo ""
+          echo "1. Check if the resource group name is correct:"
+          echo "   Resource Group: ${{ secrets.SIT_RESOURCE_GROUP }}"
+          echo ""
+          echo "2. Check if the factory name matches the parameters:"
+          echo "   Factory Name: ${{ env.FACTORY_NAME }}"
+          echo ""
+          echo "3. Recent deployment operations:"
+          DEPLOYMENT_NAME=$(az deployment group list \
+            --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+            --query "[0].name" -o tsv)
+          
+          if [ ! -z "$DEPLOYMENT_NAME" ]; then
+            az deployment operation group list \
+              --resource-group ${{ secrets.SIT_RESOURCE_GROUP }} \
+              --name "$DEPLOYMENT_NAME" \
+              -o table
+          fi
+          echo ""
+          echo "4. Check the ARM template and parameters files for syntax errors"
+          echo "5. Verify that all required secrets are set in GitHub repository settings"
