@@ -15,3 +15,22 @@
     Amazon Redshift
     Synapse Warehouse/Lakehouse
     Power BI
+
+#### Concepts:
+    ETL/ELT
+    Data Warehousing
+    Lakehouse
+    Medallion Architechture
+    SCD 1/ SCD 2
+    Delta
+    Spark
+    Data Modeling
+    DevOps/DataOps
+    Data Quality
+    Data Governance
+    Multi-Cloud
+
+#### Languages and Frameworks:
+    SQL
+    Python
+    PySpark
