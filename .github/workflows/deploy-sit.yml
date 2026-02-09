@@ -20,11 +20,10 @@ jobs:
         with:
           repository: datawarior-06/data-and-analytics
           ref: main
-          path: arm_repo
 
       # 3️⃣ Debug: list files to verify ARM templates location
       - name: List files in ARM repo
-        run: ls -R arm_repo
+        run: ls -R data-and-analytics-factory
 
       # 4️⃣ Login to Azure
       - name: Azure Login
@@ -39,6 +38,6 @@ jobs:
           scope: resourcegroup
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ secrets.SIT_RESOURCE_GROUP }}
-          template: arm_repo/ARMTemplates/ARMTemplateForFactory.json
-          parameters: arm_repo/ARMTemplates/ARMTemplateParametersForFactory.json
+          template: data-and-analytics/ARMTemplateForFactory.json
+          parameters: data-and-analytics-factory/ARMTemplates/ARMTemplateParametersForFactory.json
           failOnStdErr: true
