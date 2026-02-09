@@ -1,4 +1,4 @@
-name: Deploy ADF to SIT
+name: Deploy ADF_Publish to SIT_ADF_Publish
 
 on:
   push:
