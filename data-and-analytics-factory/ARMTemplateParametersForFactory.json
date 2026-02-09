@@ -8,9 +8,6 @@
 		"AmazonS3_secretAccessKey": {
 			"value": ""
 		},
-		"AzureBlobStorage_connectionString": {
-			"value": ""
-		},
 		"AmazonS3_properties_typeProperties_accessKeyId": {
 			"value": "AKIA3LEZTOQYD4UJ5OPQ"
 		},

@@ -11,10 +11,6 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'secretAccessKey' of 'AmazonS3'"
 		},
-		"AzureBlobStorage_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage'"
-		},
 		"AmazonS3_properties_typeProperties_accessKeyId": {
 			"type": "string",
 			"defaultValue": "AKIA3LEZTOQYD4UJ5OPQ"
@@ -300,19 +296,6 @@
 						"value": "[parameters('AmazonS3_secretAccessKey')]"
 					},
 					"authenticationType": "AccessKey"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/AzureBlobStorage')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureBlobStorage",
-				"typeProperties": {
-					"connectionString": "[parameters('AzureBlobStorage_connectionString')]"
 				}
 			},
 			"dependsOn": []
