@@ -1,6 +1,6 @@
 name: Deploy ADF to SIT
 
-# When to trigger – on push to SIT or main branch
+# When to trigger – on push to main branch
 on:
   push:
     branches:
@@ -25,10 +25,11 @@ jobs:
       #    (optional if you already have them pre-generated)
       - name: Build ADF ARM Template
         run: |
-          npm install @microsoft/azure-data-factory-utilities
-          npx azure-data-factory-utilities export \
+            npm install -g @microsoft/azure-data-factory-utilities
+            azure-data-factory-utilities export \
             --source ./ \
             --output ./ARMTemplates
+
 
       # 4) Deploy ARM template to SIT resource group
       - name: Deploy ADF Templates
