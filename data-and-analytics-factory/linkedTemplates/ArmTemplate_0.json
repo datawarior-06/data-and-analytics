@@ -7,9 +7,17 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "data-and-analytics-factory"
 		},
+		"AmazonS3_secretAccessKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'secretAccessKey' of 'AmazonS3'"
+		},
 		"AzureBlobStorage_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage'"
+		},
+		"AmazonS3_properties_typeProperties_accessKeyId": {
+			"type": "string",
+			"defaultValue": "AKIA3LEZTOQYD4UJ5OPQ"
 		},
 		"AzureKeyVault_properties_typeProperties_baseUrl": {
 			"type": "string",
@@ -20,6 +28,25 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/AmazonS3')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AmazonS3",
+				"typeProperties": {
+					"serviceUrl": "https://s3.amazonaws.com",
+					"accessKeyId": "[parameters('AmazonS3_properties_typeProperties_accessKeyId')]",
+					"secretAccessKey": {
+						"type": "SecureString",
+						"value": "[parameters('AmazonS3_secretAccessKey')]"
+					},
+					"authenticationType": "AccessKey"
+				}
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/AzureBlobStorage')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
@@ -52,16 +79,16 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "AzureBlobStorage",
+					"referenceName": "AmazonS3",
 					"type": "LinkedServiceReference"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
 					"location": {
-						"type": "AzureBlobStorageLocation",
-						"folderPath": "bronze",
-						"container": "purchase-orders"
+						"type": "AmazonS3Location",
+						"bucketName": "purchase-orders-aws",
+						"folderPath": "bronze"
 					},
 					"columnDelimiter": ",",
 					"escapeChar": "\\",
@@ -198,7 +225,7 @@
 				]
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage')]"
+				"[concat(variables('factoryId'), '/linkedServices/AmazonS3')]"
 			]
 		},
 		{
@@ -268,9 +295,9 @@
 									"type": "LinkedServiceReference"
 								}
 							],
-							"url": "https://adb-7405609046793582.2.azuredatabricks.net/api/2.1/jobs/run-now",
+							"url": "https://dbc-13bf2494-595e.cloud.databricks.com/api/2.1/jobs/run-now",
 							"body": {
-								"value": "{\n  \"job_id\": 380597783980207,\n  \"notebook_params\": {\n    \"file\": \"@{activity('GetMetadata').output.childItems[0].name}\",\n    \"env\": \"dev\"\n  }\n}",
+								"value": "{\n  \"job_id\": 708606479377793,\n  \"notebook_params\": {\n    \"file\": \"@{activity('GetMetadata').output.childItems[0].name}\",\n    \"env\": \"dev\"\n  }\n}",
 								"type": "Expression"
 							},
 							"authentication": {
@@ -285,8 +312,8 @@
 										"referenceName": "AzureKeyVault",
 										"type": "LinkedServiceReference"
 									},
-									"secretName": "databricks-pat",
-									"secretVersion": "05cd483693ba41d5905db84cc44aa7a0"
+									"secretName": "db-community-token",
+									"secretVersion": "d9a02b08b1d24ce59f1275bc68ad4393"
 								}
 							}
 						}

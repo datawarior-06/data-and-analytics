@@ -5,8 +5,14 @@
 		"factoryName": {
 			"value": "data-and-analytics-factory"
 		},
+		"AmazonS3_secretAccessKey": {
+			"value": ""
+		},
 		"AzureBlobStorage_connectionString": {
 			"value": ""
+		},
+		"AmazonS3_properties_typeProperties_accessKeyId": {
+			"value": "AKIA3LEZTOQYD4UJ5OPQ"
 		},
 		"AzureKeyVault_properties_typeProperties_baseUrl": {
 			"value": "https://globalvaultdata.vault.azure.net/"
