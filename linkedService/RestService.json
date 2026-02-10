@@ -1,0 +1,23 @@
+{
+	"name": "RestService",
+	"properties": {
+		"annotations": [],
+		"type": "RestService",
+		"typeProperties": {
+			"url": "https://data.brla.gov/api/v3/views/2ung-w7t4/query.json?",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous",
+			"authHeaders": {
+				"X-API-Key": {
+					"type": "AzureKeyVaultSecret",
+					"store": {
+						"referenceName": "AzureKeyVault",
+						"type": "LinkedServiceReference"
+					},
+					"secretName": "X-App-Token",
+					"secretVersion": "37f9acd520904adca97eaed7457c3c2f"
+				}
+			}
+		}
+	}
+}
