@@ -1,0 +1,18 @@
+{
+	"name": "DailyData",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "RestService",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"typeProperties": {
+			"relativeUrl": {
+				"value": "@concat(\n  'SELECT * WHERE input_date >= ''',\n  formatDateTime(pipeline().TriggerTime,'yyyy-MM-ddT00:00:00'),\n  ''' AND input_date < ''',\n  formatDateTime(addDays(pipeline().TriggerTime,1),'yyyy-MM-ddT00:00:00'),\n  ''''\n)",
+				"type": "Expression"
+			}
+		},
+		"schema": []
+	}
+}
