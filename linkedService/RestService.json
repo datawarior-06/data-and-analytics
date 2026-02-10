@@ -8,7 +8,7 @@
 			"enableServerCertificateValidation": true,
 			"authenticationType": "Anonymous",
 			"authHeaders": {
-				"X-API-Key": {
+				"X-API-Token": {
 					"type": "AzureKeyVaultSecret",
 					"store": {
 						"referenceName": "AzureKeyVault",
