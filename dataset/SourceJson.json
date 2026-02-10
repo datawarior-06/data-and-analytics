@@ -1,0 +1,23 @@
+{
+	"name": "SourceJson",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AmazonS3",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AmazonS3Location",
+				"bucketName": "purchase-orders-aws",
+				"folderPath": "source",
+				"fileName": {
+					"value": "@concat(\n    formatDateTime(pipeline().TriggerTime, 'dd-MM-yyyy'),\n  '.json'\n)",
+					"type": "Expression"
+				}
+			}
+		},
+		"schema": {}
+	}
+}
