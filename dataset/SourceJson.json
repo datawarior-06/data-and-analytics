@@ -13,7 +13,7 @@
 				"bucketName": "purchase-orders-aws",
 				"folderPath": "source",
 				"fileName": {
-					"value": "@concat(\n    formatDateTime(pipeline().TriggerTime, 'dd-MM-yyyy'),\n  '.json'\n)",
+					"value": "@concat(\n    formatDateTime(utcNow(), 'dd-MM-yyyy'),\n    '.json'\n)",
 					"type": "Expression"
 				}
 			}
