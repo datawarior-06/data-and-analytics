@@ -6,7 +6,8 @@
 
 #### Tools:
     Azure Data Factory
-    Data Bricks Community
+    Data Bricks
+    Azure Function
     Github
     Github Actions
     Azure Data Lake Storage Gen 2
