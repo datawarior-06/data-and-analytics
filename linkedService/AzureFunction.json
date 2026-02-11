@@ -1,0 +1,20 @@
+{
+	"name": "AzureFunction",
+	"properties": {
+		"annotations": [],
+		"type": "AzureFunction",
+		"typeProperties": {
+			"functionAppUrl": "https://purchase-orders-transfer.azurewebsites.net",
+			"authentication": "Anonymous",
+			"functionKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "AzureKeyVault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "function-key",
+				"secretVersion": "3e677792a3b945d5a0e95bccf0021143"
+			}
+		}
+	}
+}
