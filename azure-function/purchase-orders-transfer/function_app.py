@@ -14,10 +14,16 @@ app = func.FunctionApp()
 def transfer_to_s3(myblob: func.InputStream):
     """Transfer large JSON files from Azure Blob to AWS S3"""
     
-    # Extract just the filename (remove folder path)
-    filename = Path(myblob.name).name
+    # Diagnostic logging
+    logging.info(f"RAW myblob.name: '{myblob.name}'")
+    logging.info(f"Path parts: {Path(myblob.name).parts}")
     
-    logging.info(f"Processing blob: {myblob.name}, Filename: {filename}, Size: {myblob.length} bytes")
+    # Extract just the filename - more explicit approach
+    blob_path = Path(myblob.name)
+    filename = blob_path.name
+    
+    logging.info(f"Extracted filename: '{filename}'")
+    logging.info(f"Blob size: {myblob.length} bytes")
     
     # Initialize S3 client
     s3_client = boto3.client(
@@ -28,7 +34,10 @@ def transfer_to_s3(myblob: func.InputStream):
     )
     
     bucket = 'purchase-orders-aws'
-    key = f"source/{filename}"
+    # Use ONLY the filename, no prefix
+    key = f"source/{filename}"  # Changed from f"source/{filename}"
+    
+    logging.info(f"Target S3 key: '{key}'")
     
     # Configure multipart upload for large files
     transfer_config = boto3.s3.transfer.TransferConfig(
@@ -54,7 +63,7 @@ def transfer_to_s3(myblob: func.InputStream):
             }
         )
         
-        logging.info(f"✅ Successfully uploaded {filename} to s3://{bucket}/{key}")
+        logging.info(f"✅ Successfully uploaded to s3://{bucket}/{key}")
         
     except Exception as e:
         logging.error(f"❌ Failed to upload {filename}: {str(e)}")
