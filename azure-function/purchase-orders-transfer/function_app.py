@@ -1,70 +1,76 @@
-import azure.functions as func
-import boto3
-import os
 import logging
+import os
 from pathlib import Path
 
+import azure.functions as func
+from azure.storage.blob import BlobServiceClient
+import boto3
+from botocore.exceptions import BotoCoreError, ClientError
+
+
 app = func.FunctionApp()
+
 
 @app.blob_trigger(
     arg_name="myblob",
     path="purchase-orders/{name}",
     connection="AzureWebJobsStorage"
 )
-def transfer_to_s3(myblob: func.InputStream):
-    """Transfer large JSON files from Azure Blob to AWS S3"""
-    
-    # Diagnostic logging
-    logging.info(f"RAW myblob.name: '{myblob.name}'")
-    logging.info(f"Path parts: {Path(myblob.name).parts}")
-    
-    # Extract just the filename - more explicit approach
-    blob_path = Path(myblob.name)
-    filename = blob_path.name
-    
-    logging.info(f"Extracted filename: '{filename}'")
-    logging.info(f"Blob size: {myblob.length} bytes")
-    
-    # Initialize S3 client
-    s3_client = boto3.client(
-        's3',
-        aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
-        aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
-        region_name='eu-north-1'
-    )
-    
-    bucket = 'purchase-orders-aws'
-    # Use ONLY the filename, no prefix
-    key = f"source/{filename}"  # Changed from f"source/{filename}"
-    
-    logging.info(f"Target S3 key: '{key}'")
-    
-    # Configure multipart upload for large files
-    transfer_config = boto3.s3.transfer.TransferConfig(
-        multipart_threshold=1024 * 25,
-        max_concurrency=10,
-        multipart_chunksize=1024 * 25,
-        use_threads=True
-    )
-    
+def transfer_to_s3(myblob: func.InputStream) -> None:
+
+    filename = Path(myblob.name).name
+    blob_path = myblob.name
+
+    logging.warning(f"Processing blob: {blob_path}")
+
     try:
-        # Upload to S3 with streaming
-        s3_client.upload_fileobj(
-            myblob,
-            bucket,
-            key,
-            Config=transfer_config,
-            ExtraArgs={
-                'ContentType': 'application/json',
-                'Metadata': {
-                    'source': 'azure-blob',
-                    'original-name': myblob.name
-                }
-            }
+        # Environment variables
+        connection_string = os.environ["AzureWebJobsStorage"]
+        bucket_name = os.environ["S3_BUCKET_NAME"]
+        aws_region = os.environ["AWS_REGION"]
+
+        # Azure Blob client
+        blob_service_client = BlobServiceClient.from_connection_string(
+            connection_string
         )
-        
-        logging.info(f"✅ Successfully uploaded to s3://{bucket}/{key}")
-        
+
+        container_name, blob_name = blob_path.split("/", 1)
+
+        blob_client = blob_service_client.get_blob_client(
+            container=container_name,
+            blob=blob_name
+        )
+
+        logging.warning("Downloading stream from Azure...")
+
+        downloader = blob_client.download_blob()
+
+        # AWS S3 client
+        s3_client = boto3.client(
+            "s3",
+            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+            region_name=aws_region
+        )
+
+        s3_key = f"source/{filename}"
+
+        logging.warning(f"Uploading to s3://{bucket_name}/{s3_key}")
+
+        # 🚀 Reliable streaming using upload_fileobj with raw stream
+        with downloader as stream:
+            s3_client.upload_fileobj(
+                Fileobj=stream,
+                Bucket=bucket_name,
+                Key=s3_key
+            )
+
+        logging.warning(f"SUCCESS: {filename} uploaded to source/")
+
+    except (BotoCoreError, ClientError) as aws_error:
+        logging.error(f"AWS ERROR: {aws_error}")
+        raise
+
     except Exception as e:
-        logging.error(f"❌ Failed to upload {filename}: {str(e)}")
+        logging.error(f"GENERAL ERROR: {e}")
         raise
