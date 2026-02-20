@@ -11,10 +11,10 @@
     Github
     Github Actions
     Azure Data Lake Storage Gen 2
-    Amazon S3
-    Amazon IAM
-    Amazon Redshift
-    Synapse Warehouse/Lakehouse
+    AWS S3
+    AWS IAM
+    Azure Functions
+    Azure SQL 
     Power BI
 
 #### Concepts:
