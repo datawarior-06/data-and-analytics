@@ -1,0 +1,20 @@
+{
+	"name": "master",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AmazonS3",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AmazonS3Location",
+				"bucketName": "data-and-analytics-assets",
+				"folderPath": "__metadata/master"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}

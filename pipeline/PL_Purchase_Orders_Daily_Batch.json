@@ -1,0 +1,76 @@
+{
+	"name": "PL_Purchase_Orders_Daily_Batch",
+	"properties": {
+		"activities": [
+			{
+				"name": "CopyAPIToADLS",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "RestSource",
+						"httpRequestTimeout": "00:01:40",
+						"requestInterval": "00.00:00:00.010",
+						"requestMethod": "GET",
+						"additionalHeaders": {
+							"query": {
+								"value": "@concat(\n  'SELECT * WHERE input_date >= ''',\n  formatDateTime(pipeline().TriggerTime,'yyyy-MM-ddT00:00:00'),\n  ''' AND input_date < ''',\n  formatDateTime(addDays(pipeline().TriggerTime,1),'yyyy-MM-ddT00:00:00'),\n  ''''\n)",
+								"type": "Expression"
+							}
+						},
+						"paginationRules": {
+							"supportRFC5988": "true"
+						}
+					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "DailyData",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "purchase_orders_source",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "WaitForFileMovementToS3",
+				"type": "Wait",
+				"dependsOn": [
+					{
+						"activity": "CopyAPIToADLS",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"waitTimeInSeconds": 60
+				}
+			}
+		],
+		"annotations": []
+	}
+}

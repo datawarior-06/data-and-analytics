@@ -1,0 +1,43 @@
+{
+	"name": "masterWH",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SqlServer",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "pipeline_name",
+				"type": "varchar"
+			},
+			{
+				"name": "run_date",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "columns",
+				"type": "varchar"
+			},
+			{
+				"name": "watermark_column",
+				"type": "varchar"
+			},
+			{
+				"name": "last_successful_watermark",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "pipeline_admin",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "__metadata__",
+			"table": "master"
+		}
+	}
+}

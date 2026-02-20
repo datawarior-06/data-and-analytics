@@ -1,5 +1,5 @@
 {
-	"name": "PL_Purchase_Orders_Full_Load",
+	"name": "PL_Purchase_Orders",
 	"properties": {
 		"activities": [
 			{
@@ -37,7 +37,7 @@
 				"type": "WebActivity",
 				"dependsOn": [
 					{
-						"activity": "GetMetadata",
+						"activity": "ForEachFile",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -83,6 +83,22 @@
 							"secretVersion": "d9a02b08b1d24ce59f1275bc68ad4393"
 						}
 					}
+				}
+			},
+			{
+				"name": "ForEachFile",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "GetMetadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"isSequential": true
 				}
 			}
 		],
