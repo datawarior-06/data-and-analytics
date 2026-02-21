@@ -1,5 +1,5 @@
 {
-	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
 		"factoryName": {
@@ -8,11 +8,35 @@
 		"AmazonS3_secretAccessKey": {
 			"value": ""
 		},
+		"AzureDataLakeStorage_accountKey": {
+			"value": ""
+		},
+		"SqlServer_password": {
+			"value": ""
+		},
 		"AmazonS3_properties_typeProperties_accessKeyId": {
 			"value": "AKIA3LEZTOQYD4UJ5OPQ"
 		},
+		"AzureDataLakeStorage_properties_typeProperties_url": {
+			"value": "https://intermediateworkloads.dfs.core.windows.net/"
+		},
+		"AzureFunction_properties_typeProperties_functionAppUrl": {
+			"value": "https://purchase-orders-transfer.azurewebsites.net"
+		},
 		"AzureKeyVault_properties_typeProperties_baseUrl": {
 			"value": "https://globalvaultdata.vault.azure.net/"
+		},
+		"RestService_properties_typeProperties_url": {
+			"value": "https://data.brla.gov/api/v3/views/2ung-w7t4/query.json?"
+		},
+		"SqlServer_properties_typeProperties_server": {
+			"value": "data-and-analytics.database.windows.net"
+		},
+		"SqlServer_properties_typeProperties_database": {
+			"value": "data-and-analytics"
+		},
+		"SqlServer_properties_typeProperties_userName": {
+			"value": "datawarior@data-and-analytics"
 		}
 	}
 }

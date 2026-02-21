@@ -11,13 +11,45 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'secretAccessKey' of 'AmazonS3'"
 		},
+		"AzureDataLakeStorage_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage'"
+		},
+		"SqlServer_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'SqlServer'"
+		},
 		"AmazonS3_properties_typeProperties_accessKeyId": {
 			"type": "string",
 			"defaultValue": "AKIA3LEZTOQYD4UJ5OPQ"
 		},
+		"AzureDataLakeStorage_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://intermediateworkloads.dfs.core.windows.net/"
+		},
+		"AzureFunction_properties_typeProperties_functionAppUrl": {
+			"type": "string",
+			"defaultValue": "https://purchase-orders-transfer.azurewebsites.net"
+		},
 		"AzureKeyVault_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://globalvaultdata.vault.azure.net/"
+		},
+		"RestService_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://data.brla.gov/api/v3/views/2ung-w7t4/query.json?"
+		},
+		"SqlServer_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "data-and-analytics.database.windows.net"
+		},
+		"SqlServer_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "data-and-analytics"
+		},
+		"SqlServer_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "datawarior@data-and-analytics"
 		},
 		"containerUri": {
 			"type": "string",
@@ -49,11 +81,35 @@
 					"AmazonS3_secretAccessKey": {
 						"value": "[parameters('AmazonS3_secretAccessKey')]"
 					},
+					"AzureDataLakeStorage_accountKey": {
+						"value": "[parameters('AzureDataLakeStorage_accountKey')]"
+					},
+					"SqlServer_password": {
+						"value": "[parameters('SqlServer_password')]"
+					},
 					"AmazonS3_properties_typeProperties_accessKeyId": {
 						"value": "[parameters('AmazonS3_properties_typeProperties_accessKeyId')]"
 					},
+					"AzureDataLakeStorage_properties_typeProperties_url": {
+						"value": "[parameters('AzureDataLakeStorage_properties_typeProperties_url')]"
+					},
 					"AzureKeyVault_properties_typeProperties_baseUrl": {
 						"value": "[parameters('AzureKeyVault_properties_typeProperties_baseUrl')]"
+					},
+					"SqlServer_properties_typeProperties_server": {
+						"value": "[parameters('SqlServer_properties_typeProperties_server')]"
+					},
+					"SqlServer_properties_typeProperties_database": {
+						"value": "[parameters('SqlServer_properties_typeProperties_database')]"
+					},
+					"SqlServer_properties_typeProperties_userName": {
+						"value": "[parameters('SqlServer_properties_typeProperties_userName')]"
+					},
+					"AzureFunction_properties_typeProperties_functionAppUrl": {
+						"value": "[parameters('AzureFunction_properties_typeProperties_functionAppUrl')]"
+					},
+					"RestService_properties_typeProperties_url": {
+						"value": "[parameters('RestService_properties_typeProperties_url')]"
 					}
 				}
 			},
