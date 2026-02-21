@@ -23,8 +23,7 @@
 						"childItems"
 					],
 					"storeSettings": {
-						"type": "AzureBlobStorageReadSettings",
-						"recursive": true,
+						"type": "AmazonS3ReadSettings",
 						"enablePartitionDiscovery": false
 					},
 					"formatSettings": {
@@ -33,11 +32,11 @@
 				}
 			},
 			{
-				"name": "databricks_job",
-				"type": "WebActivity",
+				"name": "LookupForAlreadyProcessedFile",
+				"type": "Lookup",
 				"dependsOn": [
 					{
-						"activity": "ForEachFile",
+						"activity": "GetMetadata",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -52,45 +51,28 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"method": "POST",
-					"headers": {
-						"Content-Type": "application/json"
-					},
-					"linkedServices": [
-						{
-							"referenceName": "AzureKeyVault",
-							"type": "LinkedServiceReference"
-						}
-					],
-					"url": "https://dbc-13bf2494-595e.cloud.databricks.com/api/2.1/jobs/run-now",
-					"body": {
-						"value": "{\n  \"job_id\": 708606479377793,\n  \"notebook_params\": {\n    \"file\": \"@{activity('GetMetadata').output.childItems[0].name}\",\n    \"env\": \"dev\"\n  }\n}",
-						"type": "Expression"
-					},
-					"authentication": {
-						"type": "Basic",
-						"username": {
-							"value": "token",
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderQuery": {
+							"value": "SELECT DISTINCT processed_files FROM __metadata__.master;",
 							"type": "Expression"
 						},
-						"password": {
-							"type": "AzureKeyVaultSecret",
-							"store": {
-								"referenceName": "AzureKeyVault",
-								"type": "LinkedServiceReference"
-							},
-							"secretName": "db-community-token",
-							"secretVersion": "d9a02b08b1d24ce59f1275bc68ad4393"
-						}
-					}
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "masterWH",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
 				}
 			},
 			{
-				"name": "ForEachFile",
-				"type": "ForEach",
+				"name": "FilterProcessedFile",
+				"type": "Filter",
 				"dependsOn": [
 					{
-						"activity": "GetMetadata",
+						"activity": "LookupForAlreadyProcessedFile",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -98,7 +80,75 @@
 				],
 				"userProperties": [],
 				"typeProperties": {
-					"isSequential": true
+					"items": {
+						"value": "@activity('GetMetadata').output.childItems",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@and(\n    not(equals(item().name, activity('LookupForAlreadyProcessedFile').output.value[0].processed_files)),\n    not(equals(item().name, '_SUCCESS'))\n)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "ProcessNotProcessedFile",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "FilterProcessedFile",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('FilterProcessedFile').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "databricks-job",
+							"type": "WebActivity",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"method": "POST",
+								"headers": {
+									"Content-Type": {
+										"value": "application/json",
+										"type": "Expression"
+									}
+								},
+								"url": "https://dbc-13bf2494-595e.cloud.databricks.com/api/2.1/jobs/run-now",
+								"body": {
+									"value": "{\n  \"job_id\": 708606479377793,\n  \"notebook_params\": {\n    \"file\": \"@{item().name}\",\n    \"env\": \"dev\"\n  }\n}",
+									"type": "Expression"
+								},
+								"authentication": {
+									"type": "Basic",
+									"username": "token",
+									"password": {
+										"type": "AzureKeyVaultSecret",
+										"store": {
+											"referenceName": "AzureKeyVault",
+											"type": "LinkedServiceReference"
+										},
+										"secretName": "db-community-token",
+										"secretVersion": "d9a02b08b1d24ce59f1275bc68ad4393"
+									}
+								}
+							}
+						}
+					]
 				}
 			}
 		],

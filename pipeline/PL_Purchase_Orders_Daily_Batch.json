@@ -69,6 +69,73 @@
 				"typeProperties": {
 					"waitTimeInSeconds": 60
 				}
+			},
+			{
+				"name": "APIJob",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "WaitForFileMovementToS3",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"url": "https://dbc-13bf2494-595e.cloud.databricks.com/api/2.1/jobs/run-now",
+					"body": {
+						"value": "{\n  \"job_id\": 464379954163127,\n  \"notebook_params\": {\n    \"file\": \"@{concat(formatDateTime(utcNow(), 'dd-MM-yyyy'), '.json')}\"\n  }\n}",
+						"type": "Expression"
+					},
+					"authentication": {
+						"type": "Basic",
+						"username": "token",
+						"password": {
+							"type": "AzureKeyVaultSecret",
+							"store": {
+								"referenceName": "AzureKeyVault",
+								"type": "LinkedServiceReference"
+							},
+							"secretName": "db-community-token",
+							"secretVersion": "d9a02b08b1d24ce59f1275bc68ad4393"
+						}
+					}
+				}
+			},
+			{
+				"name": "TransformPipeline",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "APIJob",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_Purchase_Orders",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
 			}
 		],
 		"annotations": []
