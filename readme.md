@@ -1,37 +1,11 @@
-# Data and Analytics solution
+# Data and Analytics Platforms
 
-## Complete Data Engineering solution for different business use cases
+## High Level Design Architecture
 
-#### For documentation, mappings go to /docs for individual modules
+<img width="4038" height="1086" alt="image" src="https://github.com/user-attachments/assets/a19e0961-6f05-44d9-bd9f-c54e074b1b16" />
 
-#### Tools:
-    Azure Data Factory
-    Data Bricks
-    Azure Function
-    Github
-    Github Actions
-    Azure Data Lake Storage Gen 2
-    AWS S3
-    AWS IAM
-    Azure Functions
-    Azure SQL 
-    Power BI
 
-#### Concepts:
-    ETL/ELT
-    Data Warehousing
-    Lakehouse
-    Medallion Architechture
-    SCD 1/ SCD 2
-    Delta
-    Spark
-    Data Modeling
-    DevOps/DataOps
-    Data Quality
-    Data Governance
-    Multi-Cloud
+### For low level documentations, mappings go to /docs and read documentations for each business usecase
 
-#### Languages and Frameworks:
-    SQL
-    Python
-    PySpark
+
+* Note: All the data used or in scope of this project are publicly available. This project has work in progress that's why you'll encounter half-baked code, pipelines or other assets. If you face any difficulty understanding this project or want to share some interests with me please mail me on balasourvendra@gmail.com with 'Data-And-Analytics' subject line.
